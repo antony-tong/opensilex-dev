@@ -8,6 +8,7 @@ package org.opensilex.sparql.rdf4j;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
@@ -19,14 +20,14 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.*;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
-import org.eclipse.rdf4j.repository.http.HTTPRepository;
 import org.opensilex.sparql.exceptions.SPARQLException;
 import org.opensilex.sparql.service.SPARQLConnection;
 import org.opensilex.sparql.service.SPARQLResult;
 import org.opensilex.sparql.service.SPARQLStatement;
 import org.opensilex.sparql.exceptions.SPARQLQueryException;
 import org.opensilex.sparql.exceptions.SPARQLTransactionException;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -34,50 +35,46 @@ import org.opensilex.sparql.exceptions.SPARQLTransactionException;
  */
 public class RDF4JConnection implements SPARQLConnection {
 
-    private RepositoryConnection rdf4JConnection;
-    private RDF4JConfig config;
+    public static final int TIMEOUT = 20;
+    
+    private final static Logger LOGGER = LoggerFactory.getLogger(RDF4JConnection.class);
+    
+    private final RepositoryConnection rdf4JConnection;
 
-    public RDF4JConnection(RDF4JConfig config) {
-        this.config = config;
-    }
-
-    public RDF4JConnection(RepositoryConnection connection) {
-        this.rdf4JConnection = connection;
-    }
-
-    @Override
-    public void startup() {
-        if (rdf4JConnection == null) {
-            HTTPRepository repository = new HTTPRepository(config.serverURI(), config.repository());
-            rdf4JConnection = repository.getConnection();
-        }
+    private static AtomicInteger connectionCount = new AtomicInteger(0);
+    
+    public RDF4JConnection(RepositoryConnection rdf4JConnection) {
+        this.rdf4JConnection = rdf4JConnection;
+        LOGGER.debug("Acquire RDF4J sparql connection: " + this.rdf4JConnection.hashCode() + " (" + RDF4JConnection.connectionCount.incrementAndGet() + ")");
 
     }
 
     @Override
-    public void shutdown() {
-        if (rdf4JConnection != null) {
-            rdf4JConnection.close();
-        }
+    public void shutdown() throws Exception {
+        LOGGER.debug("Release RDF4J sparql connection: " + this.rdf4JConnection.hashCode() + " (" + RDF4JConnection.connectionCount.decrementAndGet() + ")");
+        this.rdf4JConnection.close();
     }
 
     @Override
     public boolean executeAskQuery(AskBuilder ask) throws SPARQLQueryException {
         BooleanQuery askQuery = rdf4JConnection.prepareBooleanQuery(QueryLanguage.SPARQL, ask.buildString());
+        askQuery.setMaxExecutionTime(TIMEOUT);
         return askQuery.evaluate();
     }
 
     @Override
     public List<SPARQLStatement> executeDescribeQuery(DescribeBuilder describe) throws SPARQLQueryException {
         GraphQuery describeQuery = rdf4JConnection.prepareGraphQuery(QueryLanguage.SPARQL, describe.buildString());
+        describeQuery.setMaxExecutionTime(TIMEOUT);
         GraphQueryResult results = describeQuery.evaluate();
-        
+
         return statementsToSPARQLResultList(results);
     }
 
     @Override
     public List<SPARQLStatement> executeConstructQuery(ConstructBuilder construct) throws SPARQLQueryException {
         GraphQuery constructQuery = rdf4JConnection.prepareGraphQuery(QueryLanguage.SPARQL, construct.buildString());
+        constructQuery.setMaxExecutionTime(TIMEOUT);
         GraphQueryResult results = constructQuery.evaluate();
 
         return statementsToSPARQLResultList(results);
@@ -86,6 +83,7 @@ public class RDF4JConnection implements SPARQLConnection {
     @Override
     public List<SPARQLResult> executeSelectQuery(SelectBuilder select, Consumer<SPARQLResult> resultHandler) throws SPARQLQueryException {
         TupleQuery selectQuery = rdf4JConnection.prepareTupleQuery(QueryLanguage.SPARQL, select.buildString());
+        selectQuery.setMaxExecutionTime(TIMEOUT);
         TupleQueryResult results = selectQuery.evaluate();
 
         return bindingSetsToSPARQLResultList(results, resultHandler);
@@ -94,12 +92,14 @@ public class RDF4JConnection implements SPARQLConnection {
     @Override
     public void executeUpdateQuery(UpdateBuilder update) throws SPARQLQueryException {
         Update updateQuery = rdf4JConnection.prepareUpdate(QueryLanguage.SPARQL, update.buildRequest().toString());
+        updateQuery.setMaxExecutionTime(TIMEOUT);
         updateQuery.execute();
     }
 
     @Override
     public void executeDeleteQuery(UpdateBuilder update) throws SPARQLQueryException {
         Update updateQuery = rdf4JConnection.prepareUpdate(QueryLanguage.SPARQL, update.buildRequest().toString());
+        updateQuery.setMaxExecutionTime(TIMEOUT);
         updateQuery.execute();
     }
 
@@ -127,14 +127,15 @@ public class RDF4JConnection implements SPARQLConnection {
     public void renameGraph(URI oldGraphURI, URI newGraphURI) throws SPARQLException {
 
         try {
-            String moveQuery = "MOVE <" + oldGraphURI + "> TO <" + newGraphURI+ ">";
-            rdf4JConnection.prepareUpdate(QueryLanguage.SPARQL, moveQuery).execute();
+            String moveQuery = "MOVE <" + oldGraphURI + "> TO <" + newGraphURI + ">";
+            Update renameQuery = rdf4JConnection.prepareUpdate(QueryLanguage.SPARQL, moveQuery);
+            renameQuery.setMaxExecutionTime(TIMEOUT);
+            renameQuery.execute();
 
         } catch (UpdateExecutionException | RepositoryException | MalformedQueryException e) {
             throw new SPARQLException(e);
         }
     }
-
 
     @Override
     public void clear() throws SPARQLQueryException {
@@ -149,6 +150,7 @@ public class RDF4JConnection implements SPARQLConnection {
             resultList.add(new RDF4JStatement(result));
         }
 
+        queryResults.close();
         return resultList;
     }
 
@@ -164,6 +166,12 @@ public class RDF4JConnection implements SPARQLConnection {
             resultList.add(result);
         }
 
+        queryResults.close();
         return resultList;
+    }
+
+    @Deprecated
+    public RepositoryConnection getRepositoryConnectionImpl() {
+        return rdf4JConnection;
     }
 }

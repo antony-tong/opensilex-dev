@@ -37,7 +37,7 @@ import org.opensilex.sparql.exceptions.SPARQLAlreadyExistingUriException;
 import org.opensilex.sparql.utils.OrderBy;
 import org.opensilex.utils.ListWithPagination;
 
-@Api(VariableAPI.CREDENTIAL_VARIABLE_GROUP_ID)
+//@Api(VariableAPI.CREDENTIAL_VARIABLE_GROUP_ID)
 @Path("/core/variable")
 public class VariableAPI {
 
@@ -54,7 +54,11 @@ public class VariableAPI {
     public static final String CREDENTIAL_VARIABLE_READ_LABEL_KEY = "credential.variable.read";
 
     @Inject
-    private SPARQLService sparql;
+    public VariableAPI(SPARQLService sparql) {
+        this.sparql = sparql;
+    }
+
+    private final SPARQLService sparql;
 
     @POST
     @ApiOperation("Create a variable")

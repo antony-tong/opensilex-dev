@@ -5,14 +5,6 @@
 //******************************************************************************
 package org.opensilex.sparql;
 
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -20,25 +12,32 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.opensilex.OpenSilex;
-import org.opensilex.sparql.SPARQLModule;
-import org.opensilex.sparql.service.SPARQLService;
 import org.opensilex.sparql.exceptions.SPARQLQueryException;
+import org.opensilex.sparql.mapping.SPARQLClassObjectMapper;
 import org.opensilex.sparql.model.A;
 import org.opensilex.sparql.model.B;
 import org.opensilex.sparql.model.TEST_ONTOLOGY;
+import org.opensilex.sparql.service.SPARQLService;
+
+import java.io.InputStream;
+import java.net.URI;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+import org.opensilex.unit.test.AbstractUnitTest;
 
 
 /**
  *
  * @author vincent
  */
-public abstract class SPARQLServiceTest {
+public abstract class SPARQLServiceTest extends AbstractUnitTest  {
 
     protected static SPARQLService service;
 
@@ -79,7 +78,7 @@ public abstract class SPARQLServiceTest {
     @Test
     public void testGetByURI() throws Exception {
         URI aURI = new URI("http://test.opensilex.org/a/001");
-        A a = service.getByURI(A.class, aURI);
+        A a = service.getByURI(A.class, aURI, null);
 
         assertEquals("Instance URI must be the same", aURI, a.getUri());
 
@@ -132,7 +131,7 @@ public abstract class SPARQLServiceTest {
 
         service.create(a);
 
-        A selectedA = service.getByURI(A.class, aURI);
+        A selectedA = service.getByURI(A.class, aURI, null);
 
         assertEquals("Instance URI must be the same", aURI, selectedA.getUri());
         assertEquals("bool field values must be the same", true, selectedA.isBool());
@@ -149,7 +148,7 @@ public abstract class SPARQLServiceTest {
 
         service.create(b);
 
-        B selectedB = service.getByURI(B.class, bURI);
+        B selectedB = service.getByURI(B.class, bURI, null);
 
         assertEquals("Instance URI must be the same", bURI, selectedB.getUri());
         assertEquals("B.getStringList size should match inserted triple count", stringList.size(), selectedB.getStringList().size());
@@ -165,11 +164,11 @@ public abstract class SPARQLServiceTest {
 
         service.create(a);
 
-        A selectedA = service.getByURI(A.class, aURI);
+        A selectedA = service.getByURI(A.class, aURI, null);
         assertEquals("Instance URI must be the same", aURI, selectedA.getUri());
 
         service.delete(A.class, aURI);
-        assertNull("Object must be null after deletion", service.getByURI(A.class, aURI));
+        assertNull("Object must be null after deletion", service.getByURI(A.class, aURI, null));
     }
 
     @Test
@@ -183,7 +182,7 @@ public abstract class SPARQLServiceTest {
 
         service.create(a);
 
-        A selectedA = service.getByURI(A.class, aURI);
+        A selectedA = service.getByURI(A.class, aURI, null);
         assertEquals("Instance URI must be the same", aURI, selectedA.getUri());
         assertEquals("A.isBool Method should return the selected boolean", Boolean.TRUE, selectedA.isBool());
         assertEquals("A.getCharVar Method should return the selected char", 'V', (char) selectedA.getCharVar());
@@ -195,7 +194,7 @@ public abstract class SPARQLServiceTest {
 
         service.update(a);
 
-        A updatedA = service.getByURI(A.class, aURI);
+        A updatedA = service.getByURI(A.class, aURI, null);
         assertEquals("Instance URI must be the same", aURI, updatedA.getUri());
         assertEquals("A.isBool Method should return the updated boolean", Boolean.FALSE, updatedA.isBool());
         assertEquals("A.getCharVar Method should return the updated char", Character.valueOf('N'), updatedA.getCharVar());
@@ -208,4 +207,25 @@ public abstract class SPARQLServiceTest {
 
         assertTrue("URI must exists and be of type B", service.uriExists(B.class, bURI));
     }
+
+    @Test
+    public void testRenameGraph() throws Exception{
+
+        B b = new B();
+        b.setUri(new URI("http://test.opensilex.org/a/testUriExistsWithClass"));
+        service.create(b);
+        SPARQLClassObjectMapper<B> objectMapper = SPARQLClassObjectMapper.getForClass(B.class);
+
+        List<B> bList = service.search(B.class, null);
+        assertFalse(bList.isEmpty());
+        Node oldGraphNode = objectMapper.getDefaultGraph();
+        URI newGraphUri =  new URI(oldGraphNode.getURI()+"new_suffix");
+        service.renameGraph(new URI(oldGraphNode.getURI()),newGraphUri);
+
+        // the graph have changed so no B should be found from the old graph
+        bList = service.search(B.class, null);
+        assertTrue(bList.isEmpty());
+
+    }
+
 }

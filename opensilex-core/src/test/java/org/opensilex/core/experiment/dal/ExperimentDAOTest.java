@@ -11,9 +11,11 @@ package org.opensilex.core.experiment.dal;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.opensilex.core.ontology.Oeso;
 import org.opensilex.core.project.dal.ProjectDAO;
 import org.opensilex.core.project.dal.ProjectModel;
 import org.opensilex.sparql.exceptions.SPARQLInvalidURIException;
+import org.opensilex.sparql.mapping.SPARQLClassObjectMapper;
 import org.opensilex.sparql.model.SPARQLResourceModel;
 import org.opensilex.utils.ListWithPagination;
 
@@ -24,29 +26,34 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.junit.After;
 import org.junit.AfterClass;
 
 import static org.junit.Assert.*;
+
 import org.opensilex.OpenSilex;
 import org.opensilex.core.CoreModule;
 import org.opensilex.rest.RestModule;
 import org.opensilex.sparql.SPARQLModule;
 import org.opensilex.sparql.service.SPARQLService;
 import org.opensilex.sparql.rdf4j.RDF4JInMemoryService;
+import org.opensilex.unit.test.AbstractUnitTest;
 
 /**
  * @author Renaud COLIN
  * @author Vincent MIGOT
  */
-public class ExperimentDAOTest {
+public class ExperimentDAOTest extends AbstractUnitTest{
+
+    private static RDF4JInMemoryService factory;
 
     protected ExperimentDAO xpDao;
-    protected static final String xpGraph = "set/experiments";
+    protected static String xpGraph;
 
     protected ProjectDAO projectDAO;
     protected ProjectModel projectModel;
-    protected static final String projectGraph = "project";
+    protected static String projectGraph;
 
     protected static SPARQLService sparql;
 
@@ -54,15 +61,18 @@ public class ExperimentDAOTest {
     public static void setup() throws Exception {
         OpenSilex.registerModule(RestModule.class);
         OpenSilex.registerModule(CoreModule.class);
-        sparql = new RDF4JInMemoryService();
-        sparql.startup();
+        factory = new RDF4JInMemoryService();
+        sparql = factory.provide();
+
+        xpGraph = SPARQLClassObjectMapper.getForClass(ExperimentModel.class).getDefaultGraph().toString();
+        projectGraph = SPARQLClassObjectMapper.getForClass(ProjectModel.class).getDefaultGraph().toString();
     }
 
     @Before
     public void init() throws Exception {
         projectModel = new ProjectModel();
         projectModel.setName("TEST PROJECT");
-        projectDAO = new ProjectDAO(sparql);
+        projectDAO = new ProjectDAO(sparql, null);
         xpDao = new ExperimentDAO(sparql);
         projectDAO.create(projectModel);
     }
@@ -75,7 +85,7 @@ public class ExperimentDAOTest {
     @AfterClass
     public static void shutdown() throws Exception {
         sparql.clear();
-        sparql.shutdown();
+        factory.dispose(sparql);
     }
 
     protected ExperimentModel getModel(int i) {
@@ -142,7 +152,7 @@ public class ExperimentDAOTest {
         compareLists(errorMsg, daoXpModel.getVariables(), xp.getVariables());
         compareLists(errorMsg, daoXpModel.getSensors(), xp.getSensors());
     }
-    
+
     private void compareLists(String errorMsg, List<?> expectedList, List<?> actualList) {
         assertTrue(errorMsg, expectedList.size() == actualList.size());
         assertTrue(errorMsg, expectedList.containsAll(actualList));
@@ -197,6 +207,41 @@ public class ExperimentDAOTest {
 
         testEquals(xpModel, xpModelResults.getList().get(0));
     }
+
+//    @Test
+//    public void searchWithDataTypeList() throws Exception {
+//
+//        ExperimentModel model = getModel(0);
+//        ExperimentModel model2 = getModel(1);
+//
+//        URI varUri = new URI(Oeso.Variable.getURI() + "/var1");
+//        URI var2Uri = new URI(Oeso.Variable.getURI() + "/var2");
+//        model.getVariables().addAll(Arrays.asList(varUri, var2Uri));
+//        model2.getVariables().add(varUri);
+//
+//        xpDao.create(model);
+//        xpDao.create(model2);
+//
+//        ExperimentSearchDTO searchDTO = new ExperimentSearchDTO();
+//        searchDTO.getVariables().add(var2Uri);
+//
+//        // search all xp with the two variable URI
+//        ListWithPagination<ExperimentModel> searchXps = xpDao.search(searchDTO, Collections.emptyList(), 0, 20);
+//        List<ExperimentModel> xpList = searchXps.getList();
+//
+//        assertEquals(1, xpList.size());
+//        assertTrue(xpList.contains(model));
+//
+//        // search all xp with only one variable URI
+//        searchDTO = new ExperimentSearchDTO();
+//        searchDTO.getVariables().add(varUri);
+//        searchXps = xpDao.search(searchDTO, Collections.emptyList(), 0, 20);
+//        xpList = searchXps.getList();
+//
+//        assertEquals(2, xpList.size());
+//        assertTrue(xpList.contains(model));
+//        assertTrue(xpList.contains(model2));
+//    }
 
     @Test
     public void searchWithObjectUriType() throws Exception {
@@ -331,20 +376,6 @@ public class ExperimentDAOTest {
         xpDao.update(xpModel);
     }
 
-//    @Test
-//    public void updateWithObjectList(){
-//
-//    }
-//
-//    @Test
-//    public void updateWithUriList(){
-//
-//    }
-//
-//    @Test
-//    public void updateWithDataList(){
-//
-//    }
     @Test
     public void delete() throws Exception {
 

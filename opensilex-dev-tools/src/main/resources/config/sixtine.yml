@@ -6,7 +6,7 @@ ontologies:
             serverURI: http://localhost:8667/rdf4j-server/
             repository: opensilex
 
-file-system:    
+file-system:   
     storageBasePath: <TO CONFIGURE>  
     
 big-data:   
@@ -45,17 +45,5 @@ phisws:
         username: opensilex
         password: opensilex
         
-    ontologyBaseURI: http://www.phenome-fppn.fr/
     vocabulary: http://www.phenome-fppn.fr/vocabulary/2017#
     infrastructure: opensilex
-    
-    uploadFileServerIP: localhost
-    uploadFileServerUsername: <TO CONFIGURE>
-    uploadFileServerPassword: <TO CONFIGURE>
-    
-    layerFileServerDirectory: /var/www/html/layers
-    layerFileServerAddress: http://localhost/layers
-    
-    uploadImageServerDirectory: /var/www/html/images
-    imageFileServerDirectory: http://localhost/images
-        

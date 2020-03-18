@@ -55,16 +55,15 @@
         <maven.minimal.version>3.5</maven.minimal.version>
         
         <!-- dependencies version -->
-        <jersey.version>2.30</jersey.version>
+        <jersey.version>2.30.1</jersey.version>
         <tomcat.version>9.0.31</tomcat.version>
         <hibernate.validator.version>6.1.2.Final</hibernate.validator.version>
-        <jackson.version>2.10.2</jackson.version>
-        <jackson.jaxrs.version>2.10.2.1</jackson.jaxrs.version>
+        <jackson.version>2.10.3</jackson.version>
         <javax.servlet.api.version>4.0.1</javax.servlet.api.version>
         <swagger.jersey2.jaxrs.version>1.6.0</swagger.jersey2.jaxrs.version>
         <maven.resolver.version>1.4.1</maven.resolver.version>
         <maven.resolver.provider.version>3.6.3</maven.resolver.provider.version>
-        <rdf4j.version>3.1.0</rdf4j.version>
+        <rdf4j.version>3.1.1</rdf4j.version>
         <jena.query.builder.version>3.14.0</jena.query.builder.version>
         <data.nucleus.version>5.2.2</data.nucleus.version>
         <data.nucleus.api.jdo.version>5.2.3</data.nucleus.api.jdo.version>
@@ -77,7 +76,7 @@
         <bcript.version>0.9.0</bcript.version>
         <commons.io.version>2.6</commons.io.version>
         <logback.version>1.2.3</logback.version>
-        <janino.version>3.1.0</janino.version>
+        <janino.version>3.1.1</janino.version>
         <slf4j.api.version>1.7.30</slf4j.api.version>
         <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
         <javax.mail.api.version>1.6.2</javax.mail.api.version>
@@ -86,14 +85,14 @@
         <jaxb.impl.version>2.3.2</jaxb.impl.version>
         <javax.activation.api.version>1.2.0</javax.activation.api.version>
         <reflections.version>0.9.12</reflections.version>
-        <httpclient.version>4.5.11</httpclient.version>
+        <httpclient.version>4.5.12</httpclient.version>
         <httpcore.version>4.4.13</httpcore.version>
         <javaee.web.api.version>8.0.1</javaee.web.api.version>
         <apache.tika.version>1.23</apache.tika.version>
         
         <!-- test only dependencies version -->
         <junit.version>4.13</junit.version>
-        <mockito.version>3.2.4</mockito.version>
+        <mockito.version>3.3.0</mockito.version>
         
         <!-- maven plugins versions -->
         <maven.clean.plugin.version>3.1.0</maven.clean.plugin.version>
@@ -125,6 +124,7 @@
         <maven.surefire.report.plugin.version>3.0.0-M3</maven.surefire.report.plugin.version>
         <maven.jxr.plugin.version>3.0.0</maven.jxr.plugin.version>
         <spotbugs.maven.plugin.version>3.1.12.2</spotbugs.maven.plugin.version>
+        <logstash-logback-encoder>6.3</logstash-logback-encoder>
     </properties>
 
     <dependencyManagement>
@@ -230,38 +230,36 @@
             <artifactId>rdf4j-repository-http</artifactId>
             <version>${rdf4j.version}</version>
         </dependency>  
-        
-        <!--RDF4J for Testing--> 
         <dependency>
             <groupId>org.eclipse.rdf4j</groupId>
             <artifactId>rdf4j-repository-sail</artifactId>
             <version>${rdf4j.version}</version>
-            <scope>test</scope>
-        </dependency>  
+        </dependency>          
+        
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-sail-inferencer</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.rdf4j</groupId>
+            <artifactId>rdf4j-shacl</artifactId>
+            <version>${rdf4j.version}</version>
+        </dependency>   
         <dependency>
             <groupId>org.eclipse.rdf4j</groupId>
             <artifactId>rdf4j-sail-nativerdf</artifactId>
             <version>${rdf4j.version}</version>
-            <scope>test</scope>
         </dependency>  
+        
+        <!--RDF4J memory sail for Testing--> 
         <dependency>
             <groupId>org.eclipse.rdf4j</groupId>
             <artifactId>rdf4j-sail-memory</artifactId>
             <version>${rdf4j.version}</version>
             <scope>test</scope>
         </dependency>  
-        <dependency>
-            <groupId>org.eclipse.rdf4j</groupId>
-            <artifactId>rdf4j-sail-inferencer</artifactId>
-            <version>${rdf4j.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.rdf4j</groupId>
-            <artifactId>rdf4j-shacl</artifactId>
-            <version>${rdf4j.version}</version>
-            <scope>test</scope>
-        </dependency>   
+      
                
         <!--DataNucleus - Big data object mapping--> 
         <dependency>
@@ -320,6 +318,13 @@
             <version>${logback.version}</version>
         </dependency>
         
+        <!--logback encoder for logstash-->
+        <dependency> 
+            <groupId>net.logstash.logback</groupId> 
+            <artifactId>logstash-logback-encoder</artifactId> 
+            <version>${logstash-logback-encoder}</version> 
+        </dependency>
+        
         <!--allow condition evaluation in logback configuration file--> 
         <dependency>
             <groupId>org.codehaus.janino</groupId>
@@ -352,19 +357,14 @@
             <version>${jersey.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-            <version>${hibernate.validator.version}</version>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcore.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-            <version>${httpcore.version}</version>
         </dependency>
         <dependency>
             <groupId>javax</groupId>
@@ -382,14 +382,18 @@
         <dependency>
             <groupId>com.fasterxml.jackson.jaxrs</groupId>
             <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>${jackson.jaxrs.version}</version>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-        
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator-annotation-processor</artifactId>
+            <version>${hibernate.validator.version}</version>
+        </dependency>
         <!--Servlet API v4 provided by Tomcat--> 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -717,6 +721,184 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>3.1.1</version>
+                    <configuration>
+                        <outputFile>../${generated.doc.site.directory}/${project.name}/checkstyle-result.xml</outputFile>
+                        <outputDirectory>../${generated.doc.site.directory}/${project.name}/checkstyle/</outputDirectory>
+                        <consoleOutput>true</consoleOutput>
+                        <logViolationsToConsole>true</logViolationsToConsole>
+                        <checkstyleRules>
+                            <module name="Checker">
+                                <!--
+                                    If you set the basedir property below, then all reported file
+                                    names will be relative to the specified directory. See
+                                    https://checkstyle.org/5.x/config.html#Checker
+                            
+                                    <property name="basedir" value="${basedir}"/>
+                                -->
+                                <property name="severity" value="warning"/>
+
+                                <property name="fileExtensions" value="java, properties, xml"/>
+
+                                <!-- Excludes all 'module-info.java' files              -->
+                                <!-- See https://checkstyle.org/config_filefilters.html -->
+                                <module name="BeforeExecutionExclusionFileFilter">
+                                    <property name="fileNamePattern" value="module\-info\.java$"/>
+                                </module>
+
+                                <!-- https://checkstyle.org/config_filters.html#SuppressionFilter -->
+                                <module name="SuppressionFilter">
+                                    <property name="file" value="${org.checkstyle.sun.suppressionfilter.config}"
+                                              default="checkstyle-suppressions.xml" />
+                                    <property name="optional" value="true"/>
+                                </module>
+
+                                <!-- Checks that a package-info.java file exists for each package.     -->
+                                <!-- See https://checkstyle.org/config_javadoc.html#JavadocPackage -->
+                                <module name="JavadocPackage"/>
+
+                                <!-- Checks whether files end with a new line.                        -->
+                                <!-- See https://checkstyle.org/config_misc.html#NewlineAtEndOfFile -->
+                                <module name="NewlineAtEndOfFile"/>
+
+                                <!-- Checks that property files contain the same keys.         -->
+                                <!-- See https://checkstyle.org/config_misc.html#Translation -->
+                                <module name="Translation"/>
+
+                                <!-- Checks for Size Violations.                    -->
+                                <!-- See https://checkstyle.org/config_sizes.html -->
+                                <module name="FileLength"/>
+                                <module name="LineLength">
+                                    <property name="fileExtensions" value="java"/>
+                                </module>
+
+                                <!-- Checks for whitespace                               -->
+                                <!-- See https://checkstyle.org/config_whitespace.html -->
+                                <module name="FileTabCharacter"/>
+
+                                <!-- Miscellaneous other checks.                   -->
+                                <!-- See https://checkstyle.org/config_misc.html -->
+                                <module name="RegexpSingleline">
+                                    <property name="format" value="\s+$"/>
+                                    <property name="minimum" value="0"/>
+                                    <property name="maximum" value="0"/>
+                                    <property name="message" value="Line has trailing spaces."/>
+                                </module>
+
+                                <!-- Checks for Headers                                -->
+                                <!-- See https://checkstyle.org/config_header.html   -->
+                                <!-- <module name="Header"> -->
+                                <!--   <property name="headerFile" value="${checkstyle.header.file}"/> -->
+                                <!--   <property name="fileExtensions" value="java"/> -->
+                                <!-- </module> -->
+
+                                <module name="TreeWalker">
+
+                                    <!-- Checks for Javadoc comments.                     -->
+                                    <!-- See https://checkstyle.org/config_javadoc.html -->
+                                    <module name="InvalidJavadocPosition"/>
+                                    <module name="JavadocMethod"/>
+                                    <module name="JavadocType"/>
+                                    <module name="JavadocVariable"/>
+                                    <module name="JavadocStyle"/>
+                                    <module name="MissingJavadocMethod"/>
+
+                                    <!-- Checks for Naming Conventions.                  -->
+                                    <!-- See https://checkstyle.org/config_naming.html -->
+                                    <module name="ConstantName"/>
+                                    <module name="LocalFinalVariableName"/>
+                                    <module name="LocalVariableName"/>
+                                    <module name="MemberName"/>
+                                    <module name="MethodName"/>
+                                    <module name="PackageName"/>
+                                    <module name="ParameterName"/>
+                                    <module name="StaticVariableName"/>
+                                    <module name="TypeName"/>
+
+                                    <!-- Checks for imports                              -->
+                                    <!-- See https://checkstyle.org/config_import.html -->
+                                    <module name="AvoidStarImport"/>
+                                    <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
+                                    <module name="RedundantImport"/>
+                                    <module name="UnusedImports">
+                                        <property name="processJavadoc" value="false"/>
+                                    </module>
+
+                                    <!-- Checks for Size Violations.                    -->
+                                    <!-- See https://checkstyle.org/config_sizes.html -->
+                                    <module name="MethodLength"/>
+                                    <module name="ParameterNumber"/>
+
+                                    <!-- Checks for whitespace                               -->
+                                    <!-- See https://checkstyle.org/config_whitespace.html -->
+                                    <module name="EmptyForIteratorPad"/>
+                                    <module name="GenericWhitespace"/>
+                                    <module name="MethodParamPad"/>
+                                    <module name="NoWhitespaceAfter"/>
+                                    <module name="NoWhitespaceBefore"/>
+                                    <module name="OperatorWrap"/>
+                                    <module name="ParenPad"/>
+                                    <module name="TypecastParenPad"/>
+                                    <module name="WhitespaceAfter"/>
+                                    <module name="WhitespaceAround"/>
+
+                                    <!-- Modifier Checks                                    -->
+                                    <!-- See https://checkstyle.org/config_modifiers.html -->
+                                    <module name="ModifierOrder"/>
+                                    <module name="RedundantModifier"/>
+
+                                    <!-- Checks for blocks. You know, those {}'s         -->
+                                    <!-- See https://checkstyle.org/config_blocks.html -->
+                                    <module name="AvoidNestedBlocks"/>
+                                    <module name="EmptyBlock"/>
+                                    <module name="LeftCurly"/>
+                                    <module name="NeedBraces"/>
+                                    <module name="RightCurly"/>
+
+                                    <!-- Checks for common coding problems               -->
+                                    <!-- See https://checkstyle.org/config_coding.html -->
+                                    <module name="EmptyStatement"/>
+                                    <module name="EqualsHashCode"/>
+                                    <module name="HiddenField"/>
+                                    <module name="IllegalInstantiation"/>
+                                    <module name="InnerAssignment"/>
+                                    <module name="MagicNumber"/>
+                                    <module name="MissingSwitchDefault"/>
+                                    <module name="MultipleVariableDeclarations"/>
+                                    <module name="SimplifyBooleanExpression"/>
+                                    <module name="SimplifyBooleanReturn"/>
+
+                                    <!-- Checks for class design                         -->
+                                    <!-- See https://checkstyle.org/config_design.html -->
+                                    <module name="DesignForExtension"/>
+                                    <module name="FinalClass"/>
+                                    <module name="HideUtilityClassConstructor"/>
+                                    <module name="InterfaceIsType"/>
+                                    <module name="VisibilityModifier"/>
+
+                                    <!-- Miscellaneous other checks.                   -->
+                                    <!-- See https://checkstyle.org/config_misc.html -->
+                                    <module name="ArrayTypeStyle"/>
+                                    <module name="FinalParameters"/>
+                                    <module name="TodoComment"/>
+                                    <module name="UpperEll"/>
+
+                                    <!-- https://checkstyle.org/config_filters.html#SuppressionXpathFilter -->
+                                    <module name="SuppressionXpathFilter">
+                                        <property name="file" value="${org.checkstyle.sun.suppressionxpathfilter.config}"
+                                                  default="checkstyle-xpath-suppressions.xml" />
+                                        <property name="optional" value="true"/>
+                                    </module>
+
+                                </module>
+
+                            </module>
+                        </checkstyleRules>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         
@@ -729,10 +911,10 @@
                 <configuration>
                     <source>${java.compiler.version}</source>
                     <target>${java.compiler.version}</target>
-                    <compilerArgs>
-                        <!--<arg>-proc:none</arg>-->
+                    <compilerArgument>-proc:none</compilerArgument>
+                    <!--                    <compilerArgs>
                         <arg>-Xlint:all</arg>
-                    </compilerArgs>
+                    </compilerArgs>-->
                     <!-- Add hibernate validation -->
                     <annotationProcessorPaths>
                         <path>
@@ -743,7 +925,6 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
-            
             <!--check minimal maven version--> 
             <plugin>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -987,6 +1168,18 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs.maven.plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.1</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>checkstyle</report>
+                        </reports>
+                    </reportSet>
+                </reportSets>
             </plugin>
         </plugins>
     </reporting>

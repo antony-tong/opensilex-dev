@@ -1,8 +1,15 @@
+//******************************************************************************
+// OpenSILEX - Licence AGPL V3.0 - https://www.gnu.org/licenses/agpl-3.0.en.html
+// Copyright © INRAE 2020
+// Contact: renaud.colin@inrae.fr, anne.tireau@inrae.fr, pascal.neveu@inrae.fr
+//******************************************************************************
+
 package org.opensilex.sparql.service;
 
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Query;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.E_GreaterThanOrEqual;
 import org.apache.jena.sparql.expr.E_LessThanOrEqual;
@@ -27,8 +34,12 @@ import java.util.*;
 import org.opensilex.sparql.service.SPARQLQueryHelper;
 
 import static org.junit.Assert.*;
+import org.opensilex.unit.test.AbstractUnitTest;
 
-public class SPARQLQueryHelperTest {
+/**
+ * @author Renaud COLIN
+ */
+public class SPARQLQueryHelperTest extends AbstractUnitTest  {
 
     @Test
     public void testGetURIField() throws SPARQLInvalidClassDefinitionException, SPARQLMapperNotFoundException {
@@ -111,6 +122,19 @@ public class SPARQLQueryHelperTest {
             Node node = SPARQLDeserializers.getForClass(obj.getClass()).getNodeFromString(obj.toString());
             assertTrue(nodeList.contains(node));
         }
+    }
+
+    @Test
+    public void testWhereValueWithMultiplesVariables() throws Exception {
+
+        SelectBuilder select = new SelectBuilder();
+
+        Map<String,List<?>> valuesMap = new HashMap<>();
+        valuesMap.put("var",Arrays.asList("v1","v2"));
+        valuesMap.put("var2", Collections.singletonList("v3"));
+
+        SPARQLQueryHelper.addWhereValues(select,valuesMap);
+        select.buildString();
     }
 
     @Test

@@ -6,13 +6,20 @@
 //******************************************************************************
 package org.opensilex.rest;
 
+import java.net.URI;
 import org.opensilex.rest.authentication.SecurityOntology;
 import org.opensilex.rest.extensions.APIExtension;
 import java.util.*;
 import org.opensilex.OpenSilex;
 import org.opensilex.module.ModuleConfig;
 import org.opensilex.OpenSilexModule;
+import org.opensilex.rest.profile.dal.ProfileModel;
+import org.opensilex.rest.security.dal.SecurityAccessDAO;
+import org.opensilex.rest.user.dal.UserDAO;
+import org.opensilex.rest.user.dal.UserModel;
 import org.opensilex.sparql.service.SPARQLService;
+import org.opensilex.sparql.service.SPARQLServiceFactory;
+import org.opensilex.utils.ListWithPagination;
 
 /**
  * <pre>
@@ -53,8 +60,45 @@ public class RestModule extends OpenSilexModule implements APIExtension {
 
     @Override
     public void startup() throws Exception {
-        SPARQLService sparql = OpenSilex.getInstance().getServiceInstance("sparql", SPARQLService.class);
-        sparql.addPrefix(SecurityOntology.PREFIX, SecurityOntology.NAMESPACE);
+        SPARQLService.addPrefix(SecurityOntology.PREFIX, SecurityOntology.NAMESPACE);
+    }
+
+    @Override
+    public void install(boolean reset) throws Exception {
+        LOGGER.info("Create default profile");
+        createDefaultProfile(reset);
+    }
+    
+    private final static String DEFAULT_PROFILE_URI = "http://www.opensilex.org/profiles/default-profile";
+    private final static String DEFAULT_PROFILE_NAME = "Default profile";
+    
+    public static void createDefaultProfile(boolean reset) throws Exception {
+        SPARQLServiceFactory factory = OpenSilex.getInstance().getServiceInstance(SPARQLService.DEFAULT_SPARQL_SERVICE, SPARQLServiceFactory.class);
+        SPARQLService sparql = factory.provide();
+        
+        SecurityAccessDAO securityDAO = new SecurityAccessDAO(sparql);
+        
+        ProfileModel profile = new ProfileModel();
+        profile.setUri(new URI(DEFAULT_PROFILE_URI));
+        profile.setName(DEFAULT_PROFILE_NAME);
+        profile.setCredentials(securityDAO.getCredentialsIdList());
+        sparql.create(profile);
+        factory.dispose(sparql);
+    }
+    
+    
+    @Override
+    public void check() throws Exception {
+        LOGGER.info("Check User existence");
+        SPARQLServiceFactory factory = OpenSilex.getInstance().getServiceInstance(SPARQLService.DEFAULT_SPARQL_SERVICE, SPARQLServiceFactory.class);
+        SPARQLService sparql = factory.provide();
+        UserDAO userDAO = new UserDAO(sparql);
+        ListWithPagination<UserModel> result = userDAO.search(null, null, null, null);
+        factory.dispose(sparql);
+        if (result.getTotal() == 0) {
+            LOGGER.error("You should at least have one user defined to have a valid configuration");
+            throw new Exception();
+        }
     }
 
 

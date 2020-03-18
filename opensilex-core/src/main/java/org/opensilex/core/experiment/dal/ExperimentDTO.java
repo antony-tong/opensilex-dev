@@ -7,10 +7,13 @@
 
 package org.opensilex.core.experiment.dal;
 
+import io.swagger.annotations.ApiModelProperty;
 import org.opensilex.rest.validation.Required;
+import org.opensilex.rest.validation.date.DateConstraint;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -21,12 +24,10 @@ public abstract class ExperimentDTO {
 
     protected URI uri;
 
-    @Required
     protected String label;
 
-    protected List<URI> projects = Collections.emptyList();
+    protected List<URI> projects = new LinkedList<>();
 
-    @Required
     protected String startDate;
 
     protected String endDate;
@@ -37,25 +38,25 @@ public abstract class ExperimentDTO {
 
     protected Integer campaign;
 
-    protected List<String> keywords = Collections.emptyList();
+    protected List<String> keywords = new LinkedList<>();
 
-    protected List<URI> scientificSupervisors = Collections.emptyList();
+    protected List<URI> scientificSupervisors = new LinkedList<>();
 
-    protected List<URI> technicalSupervisors = Collections.emptyList();
+    protected List<URI> technicalSupervisors = new LinkedList<>();
 
-    protected List<URI> groups = Collections.emptyList();
+    protected List<URI> groups = new LinkedList<>();
 
-    protected List<URI> infrastructures = Collections.emptyList();
+    protected List<URI> infrastructures = new LinkedList<>();
 
-    protected  List<URI> installations = Collections.emptyList();
+    protected  List<URI> installations = new LinkedList<>();
 
     protected URI species;
 
     protected Boolean isPublic;
 
-    protected List<URI> variables = Collections.emptyList();
+    protected List<URI> variables = new LinkedList<>();
 
-    protected List<URI> sensors = Collections.emptyList();
+    protected List<URI> sensors = new LinkedList<>();
 
 
     public URI getUri() {
@@ -67,6 +68,8 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @Required
+    @ApiModelProperty(example = "ZA17")
     public String getLabel() {
         return label;
     }
@@ -76,6 +79,7 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @ApiModelProperty(example = "http://www.phenome-fppn.fr/id/species/zeamays")
     public List<URI> getProjects() {
         return projects;
     }
@@ -85,6 +89,9 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @Required
+    @ApiModelProperty(example = "2020-02-20")
+    @DateConstraint
     public String getStartDate() {
         return startDate;
     }
@@ -94,6 +101,9 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @Required
+    @ApiModelProperty(example = "2020-02-20")
+    @DateConstraint
     public String getEndDate() {
         return endDate;
     }
@@ -103,6 +113,7 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @ApiModelProperty(example = "objective")
     public String getObjective() {
         return objective;
     }
@@ -112,6 +123,7 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @ApiModelProperty(example = "comment")
     public String getComment() {
         return comment;
     }
@@ -121,6 +133,7 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @ApiModelProperty(example = "2020")
     public Integer getCampaign() {
         return campaign;
     }
@@ -165,7 +178,7 @@ public abstract class ExperimentDTO {
         this.groups = groups;
         return this;
     }
-
+    @ApiModelProperty(example = "http://www.phenome-fppn.fr/id/species/zeamays")
     public URI getSpecies() {
         return species;
     }
@@ -175,6 +188,7 @@ public abstract class ExperimentDTO {
         return this;
     }
 
+    @ApiModelProperty(example = "true")
     public Boolean getIsPublic() {
         return isPublic;
     }

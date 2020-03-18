@@ -11,12 +11,15 @@ import io.swagger.annotations.*;
 import org.opensilex.core.experiment.dal.ExperimentDAO;
 import org.opensilex.core.experiment.dal.ExperimentModel;
 import org.opensilex.core.experiment.dal.ExperimentSearchDTO;
+import org.opensilex.rest.authentication.ApiCredential;
 import org.opensilex.rest.authentication.ApiProtected;
 import org.opensilex.rest.validation.date.DateConstraint;
-import org.opensilex.server.response.*;
+import org.opensilex.server.response.ErrorResponse;
+import org.opensilex.server.response.ObjectUriResponse;
+import org.opensilex.server.response.PaginatedListResponse;
+import org.opensilex.server.response.SingleObjectResponse;
 import org.opensilex.sparql.exceptions.SPARQLAlreadyExistingUriException;
 import org.opensilex.sparql.exceptions.SPARQLInvalidURIException;
-import org.opensilex.sparql.model.SPARQLResourceModel;
 import org.opensilex.sparql.service.SPARQLService;
 import org.opensilex.sparql.utils.OrderBy;
 import org.opensilex.utils.ListWithPagination;
@@ -30,8 +33,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
-import org.opensilex.rest.authentication.ApiCredential;
 
 /**
  * @author Vincent MIGOT
@@ -56,7 +57,11 @@ public class ExperimentAPI {
     protected static final String EXPERIMENT_EXAMPLE_URI = "http://opensilex/set/experiments/ZA17";
 
     @Inject
-    private SPARQLService sparql;
+    public ExperimentAPI(SPARQLService sparql) {
+        this.sparql = sparql;
+    }
+
+    private final SPARQLService sparql;
 
     /**
      * Create an Experiment
@@ -156,7 +161,7 @@ public class ExperimentAPI {
 
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Experiment retrieved", response = ExperimentGetDTO.class),
-        @ApiResponse(code = 404, message = "Experiment not found", response = ErrorResponse.class),
+        @ApiResponse(code = 204, message = "No experiment found", response = ErrorResponse.class),
         @ApiResponse(code = 500, message = "Internal Server Error", response = ErrorResponse.class)})
     public Response getExperiment(
             @ApiParam(value = "Experiment URI", example = "http://opensilex.dev/set/experiments/ZA17", required = true) @PathParam("uri") @NotNull URI xpUri
@@ -169,7 +174,7 @@ public class ExperimentAPI {
                 return new SingleObjectResponse<>(ExperimentGetDTO.fromModel(model)).getResponse();
             } else {
                 return new ErrorResponse(
-                        Response.Status.NOT_FOUND, "Experiment not found",
+                        Response.Status.NO_CONTENT, "Experiment not found",
                         "Unknown Experiment URI: " + xpUri.toString()
                 ).getResponse();
             }
@@ -206,19 +211,21 @@ public class ExperimentAPI {
             @ApiParam(value = "Search by start date", example = "2017-06-15") @QueryParam("startDate") @DateConstraint String startDate,
             @ApiParam(value = "Search by end date", example = "2017-06-15") @QueryParam("endDate") @DateConstraint String endDate,
             @ApiParam(value = "Search by campaign", example = "2019") @QueryParam("campaign") Integer campaign,
-            @ApiParam(value = "Search by label", example = "ZA17") @QueryParam("label") String label,
-            @ApiParam(value = "Search by keywords") @QueryParam("keywords") List<String> keywords,
-            @ApiParam(value = "Search by involved species") @QueryParam("species") URI species,
-            @ApiParam(value = "Search by related project uri") @QueryParam("project") List<URI> projects,
-            @ApiParam(value = "Search by scientific(s) supervisor(s)") @QueryParam("scientific_supervisors") List<URI> scientificSupervisors,
-            @ApiParam(value = "Search by technical(s) supervisor(s)") @QueryParam("technical_supervisors") List<URI> technicalSupervisors,
+            @ApiParam(value = "Regex pattern for filtering by label", example = "ZA17") @QueryParam("label") String label,
+            @ApiParam(value = "Search by keywords", example = "opensilex \ndigital agriculture") @QueryParam("keywords") List<String> keywords,
+            @ApiParam(value = "Regex pattern for filtering by comment", example = ".*") @QueryParam("comment") String comment,
+            @ApiParam(value = "Regex pattern for filtering by objective", example = ".*") @QueryParam("objective") String objective,
+            @ApiParam(value = "Search by involved species", example = "http://www.phenome-fppn.fr/id/species/zeamays") @QueryParam("species") URI species,
+            @ApiParam(value = "Search by related project uri", example = "http://www.phenome-fppn.fr/projects/ZA17\nhttp://www.phenome-fppn.fr/id/projects/ZA18") @QueryParam("projects") List<URI> projects,
+            @ApiParam(value = "Search by scientific(s) supervisor(s)", example = "http://www.phenome-fppn.fr/users/anne.tireau\nhttp://www.phenome-fppn.fr/users/pascal.neveu") @QueryParam("scientificSupervisors") List<URI> scientificSupervisors,
+            @ApiParam(value = "Search by technical(s) supervisor(s)", example = "http://www.phenome-fppn.fr/users/anne.tireau\nhttp://www.phenome-fppn.fr/users/pascal.neveu") @QueryParam("technicalSupervisors") List<URI> technicalSupervisors,
             @ApiParam(value = "Search by infrastructure(s)") @QueryParam("infrastructures") List<URI> infrastructures,
             @ApiParam(value = "Search by devices(s)") @QueryParam("devices") List<URI> installations,
             @ApiParam(value = "Search by groups(s)") @QueryParam("groups") List<URI> groups,
             @ApiParam(value = "Search by sensor(s)") @QueryParam("sensors") List<URI> sensors,
             @ApiParam(value = "Search by involved variable(s)") @QueryParam("variables") List<URI> variables,
-            @ApiParam(value = "search private(false) or public projects(true)", example = "true") @QueryParam("isPublic") Boolean isPublic,
-            @ApiParam(value = "search ended(false) or active projects(true)", example = "true") @QueryParam("isEnded") Boolean isEnded,
+            @ApiParam(value = "Search private(false) or public projects(true)", example = "true") @QueryParam("isPublic") Boolean isPublic,
+            @ApiParam(value = "Search ended(false) or active projects(true)", example = "true") @QueryParam("isEnded") Boolean isEnded,
             @ApiParam(value = "List of fields to sort as an array of fieldName=asc|desc", example = "label=asc") @QueryParam("orderBy") List<OrderBy> orderByList,
             @ApiParam(value = "Page number", example = "0") @QueryParam("page") @DefaultValue("0") @Min(0) int page,
             @ApiParam(value = "Page size", example = "20") @QueryParam("pageSize") @DefaultValue("20") @Min(0) int pageSize
@@ -238,7 +245,9 @@ public class ExperimentAPI {
                     .setSpecies(species)
                     .setStartDate(startDate)
                     .setEndDate(endDate)
-                    .setIsPublic(isPublic);
+                    .setIsPublic(isPublic)
+                    .setComment(comment)
+                    .setObjective(objective);
 
             // set list based DTO attributes
             searchDTO.setTechnicalSupervisors(technicalSupervisors)
@@ -253,7 +262,7 @@ public class ExperimentAPI {
 
             ListWithPagination<ExperimentModel> resultList = xpDao.search(searchDTO, orderByList, page, pageSize);
             if (resultList.getList().isEmpty()) {
-                return new ErrorResponse(Response.Status.NOT_FOUND, "No experiment found", "").getResponse();
+                return new ErrorResponse(Response.Status.NO_CONTENT, "No experiment found", "").getResponse();
             }
             // Convert paginated list to DTO
             ListWithPagination<ExperimentGetDTO> resultDTOList = resultList.convert(ExperimentGetDTO.class, ExperimentGetDTO::fromModel);

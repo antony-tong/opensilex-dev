@@ -9,19 +9,17 @@ import org.opensilex.fs.service.FileStorageService;
 import org.opensilex.config.ConfigDescription;
 import org.opensilex.module.ModuleConfig;
 
-/**
- *
- * @author vidalmor
- */
 public interface FileStorageConfig extends ModuleConfig {
 
     @ConfigDescription(
             value = "File storage access"
     )
     public FileStorageService fs();
+    
 
     @ConfigDescription(
         value = "Base path for file storage"
     )
     public String storageBasePath();
+
 }

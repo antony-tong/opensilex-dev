@@ -7,7 +7,9 @@ package org.opensilex.rest.security.dal;
 
 import org.opensilex.rest.user.dal.UserModel;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -40,17 +42,20 @@ public class SecurityAccessDAO {
 
     public static String getCredentialIdFromMethod(Method method) {
         ApiCredential credentialAnnotation = method.getAnnotation(ApiCredential.class);
-        return credentialAnnotation.credentialId();
+        return credentialAnnotation != null ? credentialAnnotation.credentialId() : null;
     }
 
     private static TreeMap<String, Map<String, String>> credentialsGroups;
 
     private static Map<String, String> credentialsGroupLabels;
+    
+    private static List<String> credentialsIdList;
 
     private void buildCredentials() {
-        if (credentialsGroups == null || credentialsGroupLabels == null) {
+        if (credentialsGroups == null || credentialsGroupLabels == null || credentialsIdList == null) {
             credentialsGroups = new TreeMap<>();
             credentialsGroupLabels = new HashMap<>();
+            credentialsIdList = new ArrayList<>();
             Set<Method> methods = ClassUtils.getAnnotatedMethods(ApiCredential.class);
             methods.forEach((method) -> {
                 ApiCredential apiCredential = method.getAnnotation(ApiCredential.class);
@@ -66,11 +71,17 @@ public class SecurityAccessDAO {
 
                     LOGGER.debug("Register credential: " + groupId + " - " + apiCredential.credentialId() + " (" + apiCredential.credentialLabelKey() + ")");
                     groupMap.put(apiCredential.credentialId(), apiCredential.credentialLabelKey());
+                    credentialsIdList.add(apiCredential.credentialId());
                 }
             });
         }
     }
 
+    public List<String> getCredentialsIdList() {
+        buildCredentials();
+        return credentialsIdList;
+    }
+    
     public Map<String, String> getCredentialsGroupLabels() {
         buildCredentials();
         return credentialsGroupLabels;

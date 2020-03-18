@@ -65,16 +65,23 @@ public class SecurityAPI {
     private final static Logger LOGGER = LoggerFactory.getLogger(SecurityAPI.class);
 
     /**
-     * Inject SPARQL service
+     * SPARQL service
      */
-    @Inject
-    private SPARQLService sparql;
+    private final SPARQLService sparql;
 
     /**
      * Inject Authentication service
      */
     @Inject
     private AuthenticationService authentication;
+
+    /**
+     * Inject SPARQL service
+     */
+    @Inject
+    public SecurityAPI(SPARQLService sparql) {
+        this.sparql = sparql;
+    }
 
     /**
      * Authenticate a user with it's identifier (email or URI) and password
@@ -98,7 +105,7 @@ public class SecurityAPI {
             @ApiParam("User authentication informations") @Valid AuthenticationDTO authenticationDTO
     ) throws Exception {
         // Create user DAO
-        UserDAO userDAO = new UserDAO(sparql, authentication);
+        UserDAO userDAO = new UserDAO(sparql);
 
         // Get user by email or by uri
         UserModel user;
@@ -115,7 +122,7 @@ public class SecurityAPI {
         }
 
         // Authenticate found user with provided password
-        if (userDAO.authenticate(user, authenticationDTO.getPassword())) {
+        if (authentication.authenticate(user, authenticationDTO.getPassword(), userDAO.getAccessList(user.getUri()))) {
             // Return user token
             return new SingleObjectResponse<TokenGetDTO>(new TokenGetDTO(user.getToken())).getResponse();
         } else {
@@ -148,8 +155,7 @@ public class SecurityAPI {
             @Context SecurityContext securityContext
     ) throws Exception {
         UserModel user = authentication.getCurrentUser(securityContext);
-        UserDAO userDAO = new UserDAO(sparql, authentication);
-        userDAO.renewToken(user);
+        authentication.renewToken(user);
 
         return new SingleObjectResponse<TokenGetDTO>(new TokenGetDTO(user.getToken())).getResponse();
     }
@@ -170,8 +176,7 @@ public class SecurityAPI {
     public Response logout(
             @Context SecurityContext securityContext
     ) {
-        UserDAO userDAO = new UserDAO(sparql, authentication);
-        userDAO.logout(authentication.getCurrentUser(securityContext));
+        authentication.logout(authentication.getCurrentUser(securityContext));
         return Response.ok().build();
     }
 
@@ -204,7 +209,7 @@ public class SecurityAPI {
     @ApiResponses({
         @ApiResponse(code = 200, message = "List of existing credentials by group in the application", response = CredentialsGroupDTO.class, responseContainer = "List")
     })
-    public Response getCredentialsGroups() {
+    public Response getCredentialsGroups() throws Exception {
         if (credentialsGroupList == null) {
             SecurityAccessDAO securityDAO = new SecurityAccessDAO(sparql);
             credentialsGroupList = new ArrayList<>();

@@ -174,6 +174,9 @@ public class AuthenticationService implements Service {
      * @return Hashed password
      */
     public String getPasswordHash(String password) {
+        if (password == null || password.isEmpty()) {
+            return password;
+        }
         return BCrypt.withDefaults().hashToString(PASSWORD_HASH_COMPLEXITY, password.toCharArray());
     }
 
@@ -238,7 +241,7 @@ public class AuthenticationService implements Service {
      *
      * @param user User having token to renew
      */
-    public void renewToken(UserModel user) {
+    public boolean renewToken(UserModel user) {
         if (user.getToken() != null) {
 
             // Check and decode current user token
@@ -286,7 +289,12 @@ public class AuthenticationService implements Service {
 
             // Set new signed token to user
             user.setToken(tokenBuilder.sign(algoRSA));
+            addUser(user, getExpireInMs());
+            
+            return true;
         }
+        
+        return false;
     }
 
     /**
@@ -322,6 +330,15 @@ public class AuthenticationService implements Service {
         DecodedJWT jwt = verifier.verify(tokenValue);
 
         return jwt.getClaim(CLAIM_CREDENTIALS_LIST).asArray(String.class);
+    }
+
+    public String[] decodeStringArrayClaim(String token, String key){
+
+        return JWT.require(algoRSA)
+                .withIssuer(TOKEN_ISSUER)
+                .build()
+                .verify(token)
+                .getClaim(key).asArray(String.class);
     }
 
     /**
@@ -452,4 +469,24 @@ public class AuthenticationService implements Service {
     public synchronized UserModel getUserByUri(URI userURI) {
         return userRegistry.get(userURI);
     }
+    
+    public boolean authenticate(UserModel user, String password, List<String> accessList) throws Exception {
+        if ((user != null && checkPassword(password, user.getPasswordHash()))) {
+            generateToken(user, accessList);
+            addUser(user, getExpireInMs());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean authenticate(UserModel user, List<String> accessList) throws Exception {
+        generateToken(user, accessList);
+        addUser(user, getExpireInMs());
+        return true;
+    }
+
+    public boolean logout(UserModel user) {
+        return (removeUser(user) != null);
+    }
+
 }

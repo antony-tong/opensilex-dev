@@ -4,7 +4,7 @@
  *  OpenSILEX
  *  Copyright © INRA 2019
  *  Creation date:  17 December, 2019
- *  Contact: arnaud.charleroy@inra.fr
+ *  Contact: arnaud.charleroy@inra.fr, anne.tireau@inrae.fr, pascal.neveu@inrae.fr
  * ******************************************************************************
  */
 package org.opensilex.core.factor.dal;
@@ -18,7 +18,7 @@ import org.opensilex.sparql.utils.ClassURIGenerator;
 
 /**
  * 
- * @author charlero
+ * @author Arnaud Charleroy
  */
 @SPARQLResource(
         ontology = Oeso.class,

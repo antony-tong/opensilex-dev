@@ -45,12 +45,16 @@ import org.opensilex.sparql.exceptions.SPARQLAlreadyExistingUriException;
 import org.opensilex.sparql.utils.OrderBy;
 import org.opensilex.utils.ListWithPagination;
 
-@Api(CREDENTIAL_VARIABLE_GROUP_ID)
-@Path("/core/variable/quality")
+//@Api(CREDENTIAL_VARIABLE_GROUP_ID)
+//@Path("/core/variable/quality")
 public class QualityAPI {
 
     @Inject
-    private SPARQLService sparql;
+    public QualityAPI(SPARQLService sparql) {
+        this.sparql = sparql;
+    }
+
+    private final SPARQLService sparql;
 
     @POST
     @ApiOperation("Create a quality")

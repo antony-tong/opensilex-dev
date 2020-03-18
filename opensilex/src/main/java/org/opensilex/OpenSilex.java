@@ -56,7 +56,7 @@ public class OpenSilex {
     private final static Logger LOGGER = LoggerFactory.getLogger(OpenSilex.class);
 
     public final static String DEFAULT_LANGUAGE = "en-US";
-    
+
     /**
      * Production profile identifier
      */
@@ -411,7 +411,7 @@ public class OpenSilex {
 
         this.debug = debug;
     }
-
+    
     /**
      * <pre>
      * Initialize application
@@ -495,9 +495,14 @@ public class OpenSilex {
      *
      * @throws Exception
      */
-    public void install() throws Exception {
-        moduleManager.install();
+    public void install(boolean reset) throws Exception {
+        moduleManager.install(reset);
     }
+    
+    public void check() throws Exception {
+        moduleManager.check();
+    }
+    
 
     /**
      * Return module instance corresponding to the given class Throw an

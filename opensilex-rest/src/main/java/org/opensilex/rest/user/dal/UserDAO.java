@@ -12,7 +12,6 @@ import javax.mail.internet.InternetAddress;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.vocabulary.FOAF;
-import org.opensilex.rest.authentication.AuthenticationService;
 import org.opensilex.rest.group.dal.GroupUserProfileModel;
 import org.opensilex.rest.profile.dal.ProfileDAO;
 import org.opensilex.rest.profile.dal.ProfileModel;
@@ -27,15 +26,14 @@ import org.opensilex.utils.ListWithPagination;
 public class UserDAO {
 
     private SPARQLService sparql;
-    private AuthenticationService authentication;
 
-    public UserDAO(SPARQLService sparql, AuthenticationService authentication) {
+    public UserDAO(SPARQLService sparql) {
         this.sparql = sparql;
-        this.authentication = authentication;
     }
 
     public UserModel getByEmail(InternetAddress email) throws Exception {
         return sparql.getByUniquePropertyValue(UserModel.class,
+                null,
                 FOAF.mbox,
                 email
         );
@@ -47,7 +45,7 @@ public class UserDAO {
             String firstName,
             String lastName,
             boolean admin,
-            String password,
+            String passwordHash,
             String lang
     ) throws Exception {
         UserModel user = new UserModel();
@@ -58,40 +56,13 @@ public class UserDAO {
         user.setAdmin(admin);
         user.setLang(lang);
 
-        if (password != null) {
-            user.setPasswordHash(authentication.getPasswordHash(password));
+        if (passwordHash != null) {
+            user.setPasswordHash(passwordHash);
         }
 
         sparql.create(user);
 
         return user;
-    }
-
-    public boolean authenticate(UserModel user, String password) throws Exception {
-        if ((user != null && authentication.checkPassword(password, user.getPasswordHash()))) {
-            List<String> accessList = getAccessList(user.getUri());
-            authentication.generateToken(user, accessList);
-            authentication.addUser(user, authentication.getExpireInMs());
-            return true;
-        }
-        return false;
-    }
-
-    public boolean authenticate(UserModel user) throws Exception {
-        List<String> accessList = getAccessList(user.getUri());
-        authentication.generateToken(user, accessList);
-        authentication.addUser(user, authentication.getExpireInMs());
-        return true;
-    }
-
-    public boolean renewToken(UserModel user) throws Exception {
-        authentication.renewToken(user);
-        authentication.addUser(user, authentication.getExpireInMs());
-        return true;
-    }
-
-    public boolean logout(UserModel user) {
-        return (authentication.removeUser(user) != null);
     }
 
     public boolean userEmailexists(InternetAddress email) throws Exception {
@@ -103,11 +74,11 @@ public class UserDAO {
     }
 
     public UserModel get(URI uri) throws Exception {
-        return sparql.getByURI(UserModel.class, uri);
+        return sparql.getByURI(UserModel.class, uri, null);
     }
 
     public List<UserModel> getList(List<URI> uri) throws Exception {
-        return sparql.getListByURIs(UserModel.class, uri);
+        return sparql.getListByURIs(UserModel.class, uri, null);
     }
 
     public void delete(URI instanceURI) throws Exception {
@@ -129,8 +100,8 @@ public class UserDAO {
             InternetAddress email,
             String firstName,
             String lastName,
-            boolean admin, 
-            String password,
+            boolean admin,
+            String passwordHash,
             String lang
     ) throws Exception {
         UserModel user = new UserModel();
@@ -140,9 +111,9 @@ public class UserDAO {
         user.setLastName(lastName);
         user.setAdmin(admin);
         user.setLang(lang);
-        
-        if (password != null) {
-            user.setPasswordHash(authentication.getPasswordHash(password));
+
+        if (passwordHash != null) {
+            user.setPasswordHash(passwordHash);
         }
 
         sparql.update(user);
@@ -172,12 +143,45 @@ public class UserDAO {
 
         return sparql.searchWithPagination(
                 UserModel.class,
+                null,
                 (SelectBuilder select) -> {
                     if (stringFilter != null) {
                         select.addFilter(stringFilter);
                     }
                 },
                 orderByList,
+                page,
+                pageSize
+        );
+    }
+
+    /**
+     * Old PHIS service mapping, should be removed after migration
+     *
+     * @param email
+     * @param firstName
+     * @param familyName
+     * @param page
+     * @param pageSize
+     * @return
+     * @deprecated
+     */
+    @Deprecated
+    public ListWithPagination<UserModel> search(String email, String firstName, String familyName, int page, int pageSize) throws Exception {
+        return sparql.searchWithPagination(
+                UserModel.class,
+                null,
+                (SelectBuilder select) -> {
+                    if (firstName != null) {
+                        select.addFilter(SPARQLQueryHelper.eq(UserModel.FIRST_NAME_FIELD, firstName));
+                    }
+                    if (firstName != null) {
+                        select.addFilter(SPARQLQueryHelper.eq(UserModel.LAST_NAME_FIELD, familyName));
+                    }
+                    if (firstName != null) {
+                        select.addFilter(SPARQLQueryHelper.eq(UserModel.EMAIL_FIELD, email));
+                    }
+                },
                 page,
                 pageSize
         );
