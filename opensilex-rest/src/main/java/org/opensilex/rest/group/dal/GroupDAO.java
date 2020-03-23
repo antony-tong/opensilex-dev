@@ -16,6 +16,7 @@ import org.apache.jena.graph.Node;
 import org.apache.jena.sparql.core.Var;
 import org.apache.jena.sparql.expr.Expr;
 import org.apache.jena.sparql.syntax.ElementNamedGraph;
+import org.apache.jena.vocabulary.DCTerms;
 import org.opensilex.rest.authentication.SecurityOntology;
 import org.opensilex.rest.user.dal.UserModel;
 import org.opensilex.sparql.deserializer.SPARQLDeserializers;
@@ -124,6 +125,14 @@ public class GroupDAO {
                 orderByList,
                 page,
                 pageSize
+        );
+    }
+
+    public boolean groupNameExists(String name) throws Exception {
+        return sparql.existsByUniquePropertyValue(
+                GroupModel.class,
+                DCTerms.title,
+                name
         );
     }
 }
