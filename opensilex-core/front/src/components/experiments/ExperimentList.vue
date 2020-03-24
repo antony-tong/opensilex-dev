@@ -173,7 +173,12 @@
                     </span>
                   </td>
                   <td>{{ formatDate(experiment.startDate) }}</td>
-                  <td><span class="uri">{{ experiment.uri }}<a href="#" class="uri-copy" title="Copier dans le presse-papier"><i class="ik ik-copy"></i></a></span></td>
+                  <td>
+                    <span class="uri">
+                      {{ experiment.uri }}
+                      <a href="#" v-on:click="copyUri(experiment.uri)" class="uri-copy" title="Copier dans le presse-papier"><i class="ik ik-copy"></i></a>
+                    </span>
+                  </td>
                   <td>
                     <i v-if="!experiment.isEnded" class="ik ik-sun badge-icon badge-info-phis" :title="$t('component.experiment.common.status.in-progress')"></i>
                     <i v-else class="ik ik-moon badge-icon badge-light" :title="$t('component.experiment.common.status.finished')"></i>
@@ -215,6 +220,7 @@ import { ProjectCreationDTO } from "../../lib//model/projectCreationDTO";
 import VueRouter from "vue-router";
 import VueI18n from 'vue-i18n';
 import moment from "moment";
+import copy from "copy-to-clipboard";
 
 export class ExperimentState {
 
@@ -453,17 +459,27 @@ export default class ExperimentList extends Vue {
         endDate = moment(dates[1], 'DD/MM/YYYY').format('YYYY-MM-DD');
       }
     }
-/*
+
     service.searchExperiments(
       this.user.getAuthorizationHeader(),
-      this.filter.uri,
+      undefined, //this.filter.uri,
       startDate,
       endDate,
       this.filter.campaign,
-      this.filter.alias,
-      null,
-      projects,
-      this.filter.species,
+      this.filter.alias, 
+      null, //keywords
+      undefined, //comment
+      undefined, //objective?: string, 
+      undefined, //species?: string, 
+      projects, //projects
+      null, //scientificSupervisors?: Array<string>, 
+      null, //technicalSupervisors?: Array<string>, 
+      null, //infrastructures?: Array<string>, 
+      null, //devices?: Array<string>, 
+      null, //groups?: Array<string>, 
+      null, //sensors?: Array<string>, 
+      null, //variables?: Array<string>, 
+      isArchived, //isPublic
       isArchived,
       this.orderBy,
       this.currentPage - 1,
@@ -483,7 +499,6 @@ export default class ExperimentList extends Vue {
       }
     })
     .catch(this.resetExperiments);
-*/
   }
 
   resetExperiments(error) {
@@ -526,8 +541,8 @@ export default class ExperimentList extends Vue {
 */
   }
 
-  formatDate(value: any): String {
-    return moment().year(value.year).month(value.month).date(value.day).format('DD/MM/YYYY');
+  formatDate(value: string): string {
+    return moment(value, 'YYYY-MM-dd').format('DD/MM/YYYY');
   }
 
   getProjectName(uri: String): String {
@@ -540,6 +555,11 @@ export default class ExperimentList extends Vue {
 
   getSpeciesName(uri: String): String {
     return uri;
+  }
+
+  copyUri(uri: string) {
+    console.log("copyUri: " + uri);
+    copy(uri);
   }
 
 }

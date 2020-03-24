@@ -53,6 +53,27 @@
     overflow-x:  visible;
 }
 
+.table-responsive .uri {
+    display: block;
+    position: relative;
+    margin-right: 10px;
+}
+
+.table-responsive .uri:hover .uri-copy {
+    display: block;
+}
+
+.table-responsive .uri .uri-copy {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.table-responsive .table thead th {
+    font-weight: normal;
+}
+
 /**
  * Fix for multiselect module
  */
