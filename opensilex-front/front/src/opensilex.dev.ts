@@ -1,1 +1,1 @@
-export default { "last-dev-update": 1585047419001};
+export default { "last-dev-update": 1585571384988};

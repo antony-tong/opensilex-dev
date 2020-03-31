@@ -1,3 +1,4 @@
+/// <reference path="../../../phis-ws/phis2-ws/front/types/phis2ws.d.ts" />
 /// <reference path="../../../opensilex-rest/front/types/opensilex-rest.d.ts" />
 /// <reference path="../../../opensilex-core/front/types/opensilex-core.d.ts" />
 /**

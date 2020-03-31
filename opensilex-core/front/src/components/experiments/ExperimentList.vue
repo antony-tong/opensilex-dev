@@ -28,14 +28,6 @@
 
     <div class="card">
 
-      <!-- div class="card-header row clearfix">
-          <div class="col col-sm-3">
-              <div class="card-options d-inline-block">
-                  <button type="button" class="btn btn-primary"><i class="ik ik-plus"></i>{{ $t('component.experiment.search.buttons.add-experiment') }}</button>
-              </div>
-          </div>                                
-      </div -->
-
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-striped table-hover">
@@ -158,7 +150,11 @@
                 </tr>
 
                 <tr v-for="experiment in experiments" v-bind:key="experiment.id">
-                  <td>{{ experiment.label }}</td>
+                  <td>
+                      <router-link :to="{path: '/experiment/' + encodeURI(experiment.uri)}">
+                        {{ experiment.label }}
+                      </router-link>
+                  </td>
                   <td>
                     <span :key="index" v-for="(uri, index) in experiment.projects">
                       <span :title="uri">{{ getProjectName(uri) }}</span><span v-if="index + 1 < experiment.projects.length">, </span>
@@ -214,9 +210,10 @@ import Vue from "vue";
 import VueConstructor from "vue";
 import { ExperimentsService } from "../../lib/api/experiments.service";
 import { ProjectsService } from "../../lib/api/projects.service";
-import HttpResponse, { OpenSilexResponse } from "../../lib//HttpResponse";
-import { ExperimentGetDTO } from "../../lib//model/experimentGetDTO";
-import { ProjectCreationDTO } from "../../lib//model/projectCreationDTO";
+import { SpeciesDTO, SpeciesService } from "phis2ws/index";
+import HttpResponse, { OpenSilexResponse } from "../../lib/HttpResponse";
+import { ExperimentGetDTO } from "../../lib/model/experimentGetDTO";
+import { ProjectCreationDTO } from "../../lib/model/projectCreationDTO";
 import VueRouter from "vue-router";
 import VueI18n from 'vue-i18n';
 import moment from "moment";
@@ -426,6 +423,7 @@ export default class ExperimentList extends Vue {
   }
 
   loadDatas() {
+    this.loadSpecies();
     this.loadProjects();
     this.loadExperiments();
     this.loadExperimentStates();
@@ -513,16 +511,45 @@ export default class ExperimentList extends Vue {
     this.experimentStates.push(new ExperimentState("finished", this.$i18n.t("component.experiment.common.status.finished").toString()));
   }
 
+  loadSpecies() {
+    console.log("loadSpecies()");
+
+    /*let service: SpeciesService = this.$opensilex.getService(
+      "opensilex.SpeciesService"
+    );
+
+    service.get(
+      this.user.getAuthorizationHeader(),
+      0,
+      1000,
+      undefined,
+      undefined,
+      undefined
+    )
+    .then((http: HttpResponse<OpenSilexResponse<Array<SpeciesDTO>>>) => {
+      console.log(http.response);
+
+      let results: Map<String, ProjectCreationDTO> = new Map<String, ProjectCreationDTO>();
+      let resultsList = [];
+      for(let i=0; i<http.response.result.length; i++) {
+        results.set(http.response.result[i].uri, http.response.result[i]);
+        resultsList.push(http.response.result[i]);
+      }
+      
+      
+    }).catch(this.$opensilex.errorHandler);*/
+  }
+
   loadProjects() {
     console.log("loadProjects()");
 
     let service: ProjectsService = this.$opensilex.getService(
       "opensilex.ProjectsService"
     );
-/*
-    service.search(
+
+    service.searchProjects(
       this.user.getAuthorizationHeader(),
-      null,
+      undefined,
       0,
       1000
     )
@@ -538,7 +565,6 @@ export default class ExperimentList extends Vue {
       this.projectsList = resultsList;
       this.projects = results;
     }).catch(this.$opensilex.errorHandler);
-*/
   }
 
   formatDate(value: string): string {

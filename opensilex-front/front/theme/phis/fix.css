@@ -64,6 +64,8 @@
 }
 
 .table-responsive .uri .uri-copy {
+    border: 1px solid #d8dde5;
+    color: #007bff;;
     display: none;
     position: absolute;
     right: 0;
@@ -72,6 +74,10 @@
 
 .table-responsive .table thead th {
     font-weight: normal;
+}
+
+.table-responsive a {
+    color: #007bff;
 }
 
 /**

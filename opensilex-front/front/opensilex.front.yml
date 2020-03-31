@@ -107,6 +107,9 @@ menu:
           component: opensilex-core-FactorList
           credentials: []
 routes:
+  - path: /experiment/:uri
+    component: opensilex-core-ExperimentView
+    credentials: []
 # Route item example:
 #  - path: /users/create
 #    component: opensilex-UserCreate
